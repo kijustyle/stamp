@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  
+  <!-- 가로모드 방지 (iOS Safari) -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-orientation" content="portrait" />
+  
+  <!-- Android Chrome -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="screen-orientation" content="portrait" />
+  <title>MindAR 타겟 디버그</title>
+  <link rel="stylesheet" href="css/ar.css" />
+  <script src="https://aframe.io/releases/1.4.1/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+</head>
+<body>
+  <!-- 노루미 오버레이 -->
+  <div class="norume-overlay" id="norumeOverlay">
+    <div class="norume-stage">
+      <img class="norume-character" src="img/character/norume.png" alt="노루미 캐릭터" />
+      <div class="shadow"></div>
+      
+      <!-- 자동재생 실패시 버튼 오버레이 추가 -->
+      <div class="overlay" id="norumeStartOverlay">
+        <button id="norumeStartBtn">▶️ 노루미의 DMZ 이야기 듣기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 호돌이 오버레이 -->
+  <div class="hodole-overlay" id="hodoleOverlay">
+    <div class="hodole-stage">
+      <img class="hodole-character" id="hodole-character" src="img/character/hodole.png" alt="호돌이 캐릭터" />
+      <div class="shadow"></div>
+
+      <div class="hodole-start-overlay" id="hodoleStartOverlay">
+        <label id="hodoleStartBtn">👆 호돌이를 클릭해주세요</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 달곰이 오버레이 -->
+  <div class="dalgome-overlay" id="dalgomeOverlay">
+    <div class="dalgome-stage">
+      <img class="dalgome-character" id="dalgome-character" src="img/character/dalgome.png" alt="달곰이 캐릭터" />
+      <div class="shadow"></div>
+      <div class="hodole-start-overlay" id="dalgomeStartOverlay">
+        <button id="dalgomeStartBtn">▶️ 달곰이의 DMZ 이야기 듣기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 꽃밭 애니메이션 섹션 -->
+  <div class="flowers-stage" id="flowersStage" style="display: none;">
+    <div class="stage" id="stage" aria-label="철책 너머로 활짝 피는 꽃">
+      <div class="hint">잠시만 기다리시면 평화의 꽃들이 피어납니다 🌸</div>
+
+      <!-- 꽃을 얹는 SVG -->
+      <svg id="overlay" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+        <defs>
+          <!-- 부드러운 그림자 -->
+          <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="4" stdDeviation="3.2" flood-color="#000" flood-opacity="0.35"/>
+          </filter>
+        </defs>
+        <g id="flowers"></g>
+      </svg>
+
+      <!-- 콘페티 -->
+      <canvas id="fx" style="position:absolute;inset:0;pointer-events:none;z-index:11"></canvas>
+
+      <div class="complete" id="complete"><h2>완료! 평화의 꽃이 만개했어요[클릭!]</h2></div>
+    </div>
+  </div>
+  
+  <!-- 나레이션 오디오 -->
+  <audio id="norumeAudio" src="mp3/norume.mp3" preload="auto"></audio>  
+  <audio id="dalgomeAudio" src="mp3/dalgome.mp3" preload="auto"></audio>
+
+  <button id="closeButton" title="창 닫기">닫기</button>
+
+  <div class="modal-overlay" id="arModal">
+    <div class="modal-container">
+      <div class="peace-symbol">🕊️</div>
+      <div class="peace-symbol">☮️</div>
+      
+      <div class="modal-header">
+        <div class="modal-header-content">
+          <h3 class="modal-title">DMZ 평화의 약속</h3>
+        </div>
+      </div>
+      
+      <div class="division-line"></div>
+      
+      <div class="modal-body">
+        <div class="discovery-message">
+          <p class="discovery-text">평화의 약속 🤙, 이제 당신 차례입니다</p>
+          <p class="discovery-subtext">
+              DMZ에서 자연과 평화를 느낀 당신의 여정은<br> 이제 마지막 단계에 이르렀습니다
+          </p>
+        </div>
+          
+        <div class="input-group">
+          <label class="input-label" for="visitNote">당신만의 평화의 약속을 남겨주세요</label>
+          <textarea 
+              class="input-field" 
+              id="visitNote" 
+              placeholder="이곳에서 느낀 점이나 평화에 대한 생각을 자유롭게 적어주세요..."
+              rows="3"
+          ></textarea>
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn btn-cancel" onclick="closeModal()">취소</button>
+        <button class="btn btn-confirm" id="confirmBtn" onclick="confirmVisit()">
+            저장
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    renderer="logarithmicDepthBuffer: true"
+    mindar-image="imageTargetSrc: targets/targets.mind; maxTrack: 7; autostart: true; filterMinCF: 0.0001; filterBeta: 0.001">
+    
+    <!-- flowers -->
+    <a-entity id="target0" mindar-image-target="targetIndex: 0"></a-entity>
+    
+    <!-- hidden-hill -->
+    <a-entity id="target1" mindar-image-target="targetIndex: 1"></a-entity>
+    
+    <!-- peace-path -->
+    <a-entity id="target2" mindar-image-target="targetIndex: 2"></a-entity>
+    
+    <!-- peace-promise -->
+    <a-entity id="target3" mindar-image-target="targetIndex: 3"></a-entity>
+    
+    <!-- iron-horse -->
+    <a-entity id="target4" mindar-image-target="targetIndex: 4"></a-entity>
+    
+    <!-- millennium -->
+    <a-entity id="target5" mindar-image-target="targetIndex: 5"></a-entity>
+    
+    <!-- peace-bridge -->
+    <a-entity id="target6" mindar-image-target="targetIndex: 6"></a-entity>
+    
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+  </a-scene>
+
+  <script>
+    let isPlaying = false;
+    let shouldIgnoreTargets = false;
+    let arSystem; // AR 시스템 참조
+
+    const sceneEl = document.querySelector('a-scene');
+
+    // AR 시스템 준비
+    sceneEl.addEventListener('arReady', () => {
+        arSystem = sceneEl.systems['mindar-image-system'];
+        console.log('AR 시스템 준비됨');
+    });
+
+    // 닫기 버튼 기능
+    document.getElementById('closeButton').addEventListener('click', function() {
+        window.close();
+    });
+
+    function hideARScanning() {
+        // 방법 1: A-Scene 자체 숨기기
+        sceneEl.style.display = 'none';
+        
+        // 방법 2: 또는 AR 시스템 중지 (가능한 경우)
+        if (arSystem && arSystem.stopTracking) {
+            arSystem.stopTracking();
+        }
+    }
+
+    const norumeOverlay = document.getElementById('norumeOverlay');
+    const norumeAudio = document.getElementById('norumeAudio');
+    const norumeStartOverlay = document.getElementById('norumeStartOverlay');
+    const norumeStartBtn = document.getElementById('norumeStartBtn');
+    
+    // 철책에 피어나는 꽃들
+    const hodoleOverlay = document.getElementById('hodoleOverlay');
+    const hodoleStartOverlay = document.getElementById('hodoleStartOverlay');
+    const hodoleCharacter = document.getElementById('hodole-character');
+
+    const target0El = document.getElementById('target0');
+
+    target0El.addEventListener('targetFound', async () => {
+        if (shouldIgnoreTargets) {
+            return;
+        }
+
+        if (!isPlaying) {
+            isPlaying = true;
+            shouldIgnoreTargets = true;
+            
+            // 🔥 AR 스캔 완전히 숨기기
+            hideARScanning();
+            
+            // 호돌이 오버레이 표시
+            hodoleOverlay.style.display = 'grid';
+            hodoleStartOverlay.classList.add('active');
+        } else {
+            return;
+        }
+    });
+
+    hodoleCharacter.addEventListener('click', async () => {
+      try {
+        // 호돌이 오버레이 숨기기
+        hodoleOverlay.style.display = 'none';
+        
+        // 꽃밭 애니메이션 표시
+        const flowersStage = document.getElementById('flowersStage');
+        flowersStage.style.display = 'block';
+        
+        // flowers.js 스크립트를 다시 실행하기 위해 동적으로 로드
+        executeFlowersScript();
+          
+      } catch (err) {
+          console.error('호돌이 상호작용 오류:', err);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const flowersCompleteBtn = document.getElementById('complete');
+        if (flowersCompleteBtn) {
+            flowersCompleteBtn.addEventListener('click', () => {
+
+                // 진행상황 저장
+                if (window.opener) {
+                    window.opener.postMessage({
+                        type: 'AR_COMPLETE',
+                        sectionId: 'flowers'
+                    }, '*');
+                }
+            });
+        }
+    });
+
+    const target1El = document.getElementById('target1');
+    
+    target1El.addEventListener('targetFound', async () => {
+        if (shouldIgnoreTargets) {
+            return;
+        }
+
+        if (!isPlaying) {
+            isPlaying = true;
+            shouldIgnoreTargets = true;
+            
+            // 🔥 AR 스캔 완전히 숨기기
+            hideARScanning();
+            
+            // 노루미 오버레이 표시
+            norumeOverlay.style.display = 'grid';
+            norumeStartOverlay.classList.add('active');
+        } else {
+            return;
+        }
+    });
+
+    // 버튼 클릭시 재생
+    norumeStartBtn.addEventListener('click', async () => {
+        try {
+            await norumeAudio.play();
+            norumeStartOverlay.classList.remove('active');
+        } catch (err) {
+            alert('오디오를 재생할 수 없습니다. 시스템 설정을 확인해 주세요.');
+        }
+    });
+
+    // 나레이션 종료 이벤트에 추가
+    norumeAudio.addEventListener('ended', () => {
+        alert('노루미의 DMZ 설명이 끝났습니다!');
+        
+        // 🔥 진행상황 저장 (hidden-land 완료)
+        if (window.opener) {
+            window.opener.postMessage({
+                type: 'AR_COMPLETE',
+                sectionId: 'hidden-land'
+            }, '*');
+        }
+
+    });
+
+    const target2El = document.getElementById('target2');
+    
+    target2El.addEventListener('targetFound', async () => {
+      // 성공 메시지 표시 후 이동
+      alert('여러분의 한 걸음 한 걸음이 DMZ에 평화의 길을 만들었습니다. \n마지막 사진촬영과 함께 완주하시면 됩니다! 🚶‍♂️🚶‍♀️');
+      
+      setTimeout(() => {
+          window.location.href = 'photo.html';
+      }, 1000);
+    });
+
+    const target3El = document.getElementById('target3');
+    
+    target3El.addEventListener('targetFound', async () => {
+      showArModal()
+    });
+
+    const target4El = document.getElementById('target4');
+    
+    target4El.addEventListener('targetFound', async () => {
+      // 성공 메시지 표시 후 이동
+      alert('철길이 끊겨 달릴수 없는 열차를 찾았습니다.\n도와주세요!! 🛤️');
+      
+      setTimeout(() => {
+          window.location.href = 'iron-horse.html';
+      }, 1000);
+    });
+        
+
+    const dalgomeOverlay = document.getElementById('dalgomeOverlay');
+    const dalgomeAudio = document.getElementById('dalgomeAudio');
+    const dalgomeStartOverlay = document.getElementById('dalgomeStartOverlay');
+    const dalgomeStartBtn = document.getElementById('dalgomeStartBtn');
+    const dalgomaImg = document.getElementById('dalgome-character');
+
+    const target5El = document.getElementById('target5');
+    
+    target5El.addEventListener('targetFound', async () => {
+        if (shouldIgnoreTargets) {
+            return;
+        }
+
+        if (!isPlaying) {
+            isPlaying = true;
+            shouldIgnoreTargets = true;
+            
+            // 🔥 AR 스캔 완전히 숨기기
+            hideARScanning();
+            
+            // 노루미 오버레이 표시
+            dalgomeOverlay.style.display = 'grid';
+            dalgomeStartOverlay.classList.add('active');
+        } else {
+            return;
+        }
+    });
+
+    dalgomeStartBtn.addEventListener('click', async () => {
+        try {
+          if (dalgomaImg) {
+              dalgomaImg.src = 'img/character/dalgome_wave.gif';
+          }
+          await dalgomeAudio.play();
+          dalgomeStartOverlay.classList.remove('active');
+        } catch (err) {
+            alert('오디오를 재생할 수 없습니다. 시스템 설정을 확인해 주세요.');
+        }
+    });
+
+    // 나레이션 종료 이벤트에 추가
+    dalgomeAudio.addEventListener('ended', () => {
+        alert('달곰이의 인사를 잘 들으셨나요? \n천연기념물 친구들을 지켜주세요~!');
+
+        // 🔥 진행상황 저장 (hidden-land 완료)
+        if (window.opener) {
+            window.opener.postMessage({
+                type: 'AR_COMPLETE',
+                sectionId: 'millennium'
+            }, '*');
+        }
+
+    });
+
+    const target6El = document.getElementById('target6');
+    
+    target6El.addEventListener('targetFound', async () => {
+      // 성공 메시지 표시 후 이동
+      alert('평화의 다리를 발견했습니다! 다음 단계로 이동합니다.');
+      
+      sessionStorage.setItem('pendingCompletion', JSON.stringify({
+          type: 'AR_COMPLETE',
+          sectionId: 'peace-bridge',
+          timestamp: Date.now()
+      }));
+      
+      setTimeout(() => {
+          window.location.href = 'bridge.html';
+      }, 1000);
+    });
+    
+        
+  </script>
+  <script src="js/flowers.js"></script>
+  <script src="js/modal.js"></script>
+
+</body>
+</html>

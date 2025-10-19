@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>노루미 + 자동 나레이션</title>
+  <style>
+    :root { --speed: 2.2s; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", sans-serif;
+      background: linear-gradient(180deg,#f7fafc,#edf2f7);
+    }
+    .stage {
+      position: relative; width: min(90vw, 420px); aspect-ratio: 1/1;
+      display: grid; place-items: end center; padding-bottom: 28px;
+      background: radial-gradient(60% 50% at 50% 40%, #fff 0%, #f1f5f9 100%);
+      border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.6);
+      overflow: hidden;
+    }
+    .norume {
+      width: clamp(160px, 40vw, 260px);
+      transform-origin: 50% 92%;
+      animation: bob var(--speed) ease-in-out infinite, sway calc(var(--speed)*1.05) ease-in-out infinite;
+      user-select: none; -webkit-user-drag: none;
+    }
+    .shadow {
+      position: absolute; bottom: 18px; width: clamp(120px,36vw,200px); height: 28px;
+      background: radial-gradient(closest-side, rgba(0,0,0,.25), rgba(0,0,0,0)); filter: blur(1px);
+      animation: shadow var(--speed) ease-in-out infinite;
+    }
+    @keyframes bob { 0%,100%{transform:translateY(0) scale(1)}
+      25%{transform:translateY(-8px) scale(1.02)}
+      50%{transform:translateY(-12px) scale(1.03)}
+      75%{transform:translateY(-8px) scale(1.02)} }
+    @keyframes sway { 0%,100%{rotate:0deg} 25%{rotate:-2.3deg} 75%{rotate:2.3deg} }
+    @keyframes shadow { 0%,100%{transform:scale(1);opacity:.5} 50%{transform:scale(.9);opacity:.75} }
+
+    /* 오토플레이 실패시 표시되는 오버레이 */
+    .overlay {
+        position: fixed;
+        inset: 0;
+        display: none;              /* 기본은 숨김 */
+        place-items: center;
+        background: rgba(0,0,0,0.4);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        z-index: 1000;
+    }
+    .overlay.active { display: grid; }
+
+    /* 글래시즘 버튼 */
+    #startBtn {
+        padding: 14px 28px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #fff;
+        background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 16px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15),
+                    inset 0 1px 1px rgba(255,255,255,0.25);
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    #startBtn:hover {
+        background: rgba(255,255,255,0.25);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(0,0,0,0.25),
+                    inset 0 1px 1px rgba(255,255,255,0.3);
+    }
+
+    #startBtn:active {
+        transform: translateY(0);
+        box-shadow: 0 3px 12px rgba(0,0,0,0.2),
+                    inset 0 1px 1px rgba(255,255,255,0.3);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .norume, .shadow { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="stage" id="stage">
+      <!-- 캐릭터 이미지 -->
+      <img id="norume" class="norume" src="img/character/norume.png" alt="노루미 캐릭터" />
+      <div class="shadow"></div>
+    </div>
+
+    <!-- 나레이션 오디오 -->
+    <audio id="narration" src="mp3/norume.mp3" preload="auto" playsinline></audio>
+
+    <!-- 오토플레이 실패시 버튼 -->
+    <div class="overlay" id="overlay">
+        <button id="startBtn">▶️ 노루미의 DMZ 이야기 듣기</button>
+    </div>
+  </main>
+
+  <script>
+    const img = document.getElementById('norume');
+    const audio = document.getElementById('narration');
+    const overlay = document.getElementById('overlay');
+    const startBtn = document.getElementById('startBtn');
+
+    // 이미지가 완전히 로드되면 오디오 자동 재생 시도
+    img.addEventListener('load', async () => {
+      try {
+        await audio.play(); // 자동재생 시도
+        overlay.classList.remove('active');
+        overlay.style.display = 'none'; // 안전하게 숨기기
+      } catch (err) {
+        // 자동재생 실패 → 버튼 오버레이 보여주기
+        overlay.classList.add('active');
+      }
+    });
+
+    // 버튼 클릭 시 오디오 재생
+    startBtn.addEventListener('click', async () => {
+      try {
+        await audio.play();
+        overlay.classList.remove('active');
+        overlay.style.display = 'none'; // 확실히 숨기기
+      } catch (err) {
+        alert('오디오를 재생할 수 없습니다. 시스템/브라우저의 사운드 설정을 확인해 주세요.');
+      }
+    });
+
+    // 오디오 끝났을 때 이벤트
+    audio.addEventListener('ended', () => {
+      alert('나레이션이 끝났습니다!');
+      const endedEvent = new CustomEvent('norume:narration:ended', {
+        detail: { duration: audio.duration }
+      });
+      window.dispatchEvent(endedEvent);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>철책 너머로 활짝 피는 꽃 (센터-아웃)</title>
+<style>
+  :root{
+    --target-min: 9;   /* 목표 최소 */
+    --target-max: 11;  /* 목표 최대 */
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;margin:0}
+  body{background:#0b0f12;font-family:ui-sans-serif,system-ui,-apple-system,"Noto Sans KR",sans-serif}
+
+  /* 무대: 배경 이미지를 꽉 채우기 */
+  .stage{
+    position:fixed; inset:0;
+    background:#000 url("img/flowers_bg.png") center/cover no-repeat;
+    overflow:hidden;
+  }
+
+  /* 꽃을 얹을 레이어 (SVG) */
+  svg#overlay{position:absolute; inset:0; width:100%; height:100%; display:block}
+
+  /* HUD / 완료 */
+  .hud{
+    position:absolute; top:10px; right:10px; z-index:10;
+    background:#111827cc; color:#fff; padding:6px 10px; font-size:12px;
+    border-radius:999px; pointer-events:none;
+  }
+  .hint{
+    position:absolute; left:50%; transform:translateX(-50%);
+    bottom:10px; z-index:10;
+    background:#ffffffee; border:1px solid #e5e7eb; color:#111827;
+    padding:6px 10px; font-size:13px; border-radius:10px; backdrop-filter:blur(6px)
+  }
+  .complete{
+    position:absolute; inset:0; z-index:12; display:none; place-items:center;
+    background:rgba(255,255,255,.55); backdrop-filter:blur(6px);
+  }
+  .complete h2{
+    margin:0; padding:12px 18px; border-radius:14px; font-size:20px;
+    background:#d1fae5; color:#065f46; border:1px solid #10b981;
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+  }
+
+  @media (prefers-reduced-motion: reduce){ .hint{display:none} }
+</style>
+</head>
+<body>
+<div class="stage" id="stage" aria-label="철책 너머로 활짝 피는 꽃">
+  <div class="hud"><span id="progress">0 / ?</span></div>
+  <div class="hint">화면을 탭하면 꽃이 중심에서 퍼지며 피어요 🌹</div>
+
+  <!-- 꽃을 얹는 SVG -->
+  <svg id="overlay" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+    <defs>
+      <!-- 부드러운 그림자 -->
+      <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="4" stdDeviation="3.2" flood-color="#000" flood-opacity="0.35"/>
+      </filter>
+    </defs>
+    <g id="flowers"></g>
+  </svg>
+
+  <!-- 콘페티 -->
+  <canvas id="fx" style="position:absolute;inset:0;pointer-events:none;z-index:11"></canvas>
+
+  <div class="complete" id="complete"><h2>완료! 평화의 꽃이 만개했어요</h2></div>
+</div>
+
+<script>
+(function(){
+  const stage = document.getElementById('stage');
+  const svg   = document.getElementById('overlay');
+  const layer = document.getElementById('flowers');
+  const hud   = document.getElementById('progress');
+  const done  = document.getElementById('complete');
+
+  const fx = document.getElementById('fx');
+  const ctx = fx.getContext('2d');
+
+  // 목표 개수 무작위 (9~11)
+  const TARGET = randInt(getCss('--target-min', 9), getCss('--target-max', 11));
+  let opened = 0;
+  hud.textContent = `${opened} / ${TARGET}`;
+
+  // 네가 제공한 4개의 꽃 이미지 경로
+  const FLOWER_SOURCES = [
+    'img/flower_1.png',
+    'img/flower_2.png',
+    'img/flower_3.png',
+    'img/flower_4.png'
+  ];
+  let imagePool = [];
+
+  // 캔버스 리사이즈
+  function resizeFX(){
+    fx.width  = stage.clientWidth * devicePixelRatio;
+    fx.height = stage.clientHeight * devicePixelRatio;
+    fx.style.width  = stage.clientWidth + 'px';
+    fx.style.height = stage.clientHeight + 'px';
+  }
+  window.addEventListener('resize', resizeFX, {passive:true});
+  resizeFX();
+
+  // CSS 변수 숫자 읽기
+  function getCss(name, fallback){
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const n = Number(v); return Number.isFinite(n) ? n : fallback;
+  }
+  function rand(min,max){ return Math.random()*(max-min)+min; }
+  function randInt(min,max){ return Math.floor(rand(min,max+1)); }
+
+  // 포인터 좌표 -> SVG 좌표
+  function toSVGPoint(x,y){
+    const pt = new DOMPoint(x,y);
+    const ctm = svg.getScreenCTM().inverse();
+    return pt.matrixTransform(ctm);
+  }
+
+  // ===== 이미지 프리로드 =====
+  Promise.allSettled(
+    FLOWER_SOURCES.map(src => new Promise(res=>{
+      const im = new Image();
+      im.onload = ()=>res({ok:true, img:im});
+      im.onerror = ()=>res({ok:false});
+      im.src = src;
+    }))
+  ).then(results=>{
+    imagePool = results.filter(r=>r.value && r.value.ok).map(r=>r.value.img);
+  });
+
+  // ===== 센터-아웃 개화: 마스크+스케일 애니메이션 =====
+  function plantAt(clientX, clientY){
+    if(opened >= TARGET) return;
+    if(imagePool.length === 0) return; // 이미지 준비 전 탭 방지
+
+    const p = toSVGPoint(clientX, clientY);
+    const pick = imagePool[randInt(0, imagePool.length-1)];
+
+    // 그룹 생성
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('filter','url(#softShadow)');
+    layer.appendChild(g);
+
+    // 고정 기준 크기(이미지 실제 크기와 무관하게 화면 기준으로 통일)
+    const base = rand(80, 120);       // 기존 120~170 → 80~120
+    const scaleTarget = rand(0.7, 1.0); // 기존 0.95~1.25 → 0.7~1.0
+    const rot   = rand(-8, 8);
+
+    // 이미지 노드
+    const img = document.createElementNS('http://www.w3.org/2000/svg','image');
+    img.setAttributeNS('http://www.w3.org/1999/xlink','href', pick.src);
+    img.setAttribute('width', base);
+    img.setAttribute('height', base);
+    img.setAttribute('x', -base/2);
+    img.setAttribute('y', -base/2);
+    img.setAttribute('preserveAspectRatio','xMidYMid meet');
+
+    // 마스크(원형) - 중심에서 반경이 커지며 드러남
+    const maskId = 'm' + Math.random().toString(36).slice(2);
+    const mask = document.createElementNS('http://www.w3.org/2000/svg','mask');
+    mask.setAttribute('id', maskId);
+
+    const maskCircle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    maskCircle.setAttribute('cx','0');
+    maskCircle.setAttribute('cy','0');
+    maskCircle.setAttribute('r','0');            // 시작은 0
+    maskCircle.setAttribute('fill','#fff');      // 흰색=보이는 영역
+    mask.appendChild(maskCircle);
+    svg.querySelector('defs')?.appendChild(mask) || (()=>{ // defs 없으면 만든다
+      const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+      svg.prepend(defs); defs.appendChild(mask);
+    })();
+
+    // 이미지에 마스크 적용
+    img.setAttribute('mask', `url(#${maskId})`);
+    g.appendChild(img);
+
+    // 초기 트랜스폼(opacity 0, 아주 작게)
+    g.style.opacity = '0';
+    g.setAttribute('transform', `translate(${p.x},${p.y}) scale(0.15) rotate(${rot})`);
+
+    // 애니메이션: 1) 불투명도, 2) 스케일(센터-아웃), 3) 마스크 반경 확장
+    const D_OPA = 220;    // opacity 트랜지션(ms)
+    const D_SCL = 680;    // scale 트랜지션(ms)
+    const D_MSK = 700;    // 마스크 반경 확장(ms)
+    const rTarget = Math.sqrt((base/2)**2 + (base/2)**2); // 이미지 대각선 반 정도 → 충분히 커지게
+
+    // opacity + scale easing
+    requestAnimationFrame(()=>{
+      g.style.transition = `opacity ${D_OPA}ms ease, transform ${D_SCL}ms cubic-bezier(.2,1.2,.2,1)`;
+      g.style.opacity = '1';
+      g.setAttribute('transform', `translate(${p.x},${p.y}) scale(${scaleTarget*1.03}) rotate(${rot})`);
+      setTimeout(()=>{
+        g.setAttribute('transform', `translate(${p.x},${p.y}) scale(${scaleTarget}) rotate(${rot})`);
+      }, D_SCL);
+    });
+
+    // 마스크 반경은 JS로 부드럽게 확대
+    const t0 = performance.now();
+    (function growMask(now){
+      const t = Math.min(1, (now - t0) / D_MSK);
+      const ease = t<0.5 ? 2*t*t : -1+(4-2*t)*t; // 약한 easeInOut
+      const r = rTarget * ease;
+      maskCircle.setAttribute('r', String(r));
+      if(t < 1) requestAnimationFrame(growMask);
+    })(t0);
+
+    // 미세 흔들림(자연스러움)
+    sway(g, p.x, p.y, scaleTarget, rot);
+
+    // 진행/완료
+    opened += 1;
+    hud.textContent = `${opened} / ${TARGET}`;
+    if (opened >= TARGET) setTimeout(complete, 750);
+  }
+
+  // 미세 흔들림
+  function sway(node, x, y, scale, rot){
+    const phase = Math.random()*Math.PI*2;
+    (function loop(){
+      if (!document.body.contains(node)) return;
+      const t = performance.now()/1000 + phase;
+      const dx = Math.sin(t*0.7)*1.2;
+      const dy = Math.cos(t*0.9)*0.8;
+      node.setAttribute('transform',`translate(${x+dx},${y+dy}) scale(${scale}) rotate(${rot})`);
+      requestAnimationFrame(loop);
+    })();
+  }
+
+  // 완료 처리
+  function complete(){
+    stage.removeEventListener('pointerdown', onDown);
+    document.getElementById('complete').style.display='grid';
+    confetti();
+    // 외부 연동 이벤트/콜백
+    stage.dispatchEvent(new CustomEvent('garden:complete', {detail:{ total: opened, target: TARGET }}));
+    if (typeof window.onGardenComplete === 'function'){
+      window.onGardenComplete({ total: opened, target: TARGET });
+    }
+  }
+
+  // 입력 처리
+  function onDown(e){
+    const p = (e.touches && e.touches[0]) || e;
+    plantAt(p.clientX, p.clientY);
+  }
+  stage.addEventListener('pointerdown', onDown);
+
+  // 간단 콘페티
+  function confetti(){
+    resizeFX();
+    const pieces=[];
+    for(let i=0;i<700;i++){
+      pieces.push({
+        x: fx.width/2 + (Math.random()*80-40),
+        y: fx.height*0.55,
+        vx: Math.random()*6-3,
+        vy: - (4+Math.random()*5),
+        g: 0.08 + Math.random()*0.08,
+        s: 2 + Math.random()*2,
+        a: 1,
+        r: Math.random()*Math.PI
+      });
+    }
+    function step(){
+      ctx.clearRect(0,0,fx.width,fx.height);
+      for(const p of pieces){
+        p.vy += p.g; p.x += p.vx; p.y += p.vy; p.r += 0.1; p.a -= 0.007;
+        ctx.globalAlpha = Math.max(0,p.a);
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r);
+        ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s); ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+      if (pieces.some(p=>p.a>0 && p.y<fx.height+20)) requestAnimationFrame(step);
+    }
+    step();
+    setTimeout(()=>ctx.clearRect(0,0,fx.width,fx.height), 2600);
+  }
+
+  // 유틸
+  function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+})();
+</script>
+</body>
+</html>

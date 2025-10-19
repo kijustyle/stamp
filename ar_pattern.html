@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AR 마커 + 비디오 + 사운드</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.rawgit.com/AR-js-org/AR.js/3.3.2/aframe/build/aframe-ar.min.js"></script>
+
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      a-scene {
+        width: 100vw !important;
+        height: 100vh !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+      }
+
+      .popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #000;
+        padding: 0;
+        border-radius: 15px;
+        z-index: 9999;
+        display: none;
+        width: 90vw;
+        max-width: 560px;
+        height: 315px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        animation: fadeIn 0.4s ease-out;
+      }
+
+      .popup video {
+        width: 100%;
+        height: 100%;
+        border-radius: 15px;
+        background: black;
+      }
+
+      #soundBtn {
+        position: fixed;
+        top: calc(50% + 180px);
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        color: white;
+        background-color: #ff5f5f;
+        border: none;
+        border-radius: 10px;
+        z-index: 10000;
+        display: none;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      @keyframes fadeIn {
+        from {
+          transform: translate(-50%, -50%) scale(0.8);
+          opacity: 0;
+        }
+        to {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 비디오 팝업 -->
+    <div id="popup" class="popup">
+      <video id="videoPlayer" playsinline muted>
+        <source src="myvideo.mp4" type="video/mp4" />
+        비디오를 지원하지 않는 브라우저입니다.
+      </video>
+    </div>
+
+    <!-- 사운드 재생 버튼 -->
+    <button id="soundBtn">🔊 사운드 재생</button>
+
+    <!-- AR 씬 -->
+    <a-scene embedded arjs="sourceType: webcam;">
+      <a-marker id="targetMarker" type="pattern" url="marker.patt">
+        <!-- 필요하면 모델 추가 -->
+        <!-- <a-entity gltf-model="model/character.glb" scale="1 1 1" position="0 0 0" rotation="0 0 0"></a-entity> -->
+      </a-marker>
+      <a-marker id="targetMarker1" type="pattern" url="flowers.patt">
+        <!-- 필요하면 모델 추가 -->
+        <!-- <a-entity gltf-model="model/character.glb" scale="1 1 1" position="0 0 0" rotation="0 0 0"></a-entity> -->
+      </a-marker>
+      <a-marker id="targetMarker2" type="pattern" url="peace-bridge.patt">
+        <!-- 필요하면 모델 추가 -->
+        <!-- <a-entity gltf-model="model/character.glb" scale="1 1 1" position="0 0 0" rotation="0 0 0"></a-entity> -->
+      </a-marker>
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+      const marker = document.querySelector('#targetMarker')
+      const marker1 = document.querySelector('#targetMarker1')
+      const marker2 = document.querySelector('#targetMarker2')
+      const popup = document.getElementById('popup')
+      const video = document.getElementById('videoPlayer')
+      const soundBtn = document.getElementById('soundBtn')
+
+      marker.addEventListener('markerFound', () => {
+        popup.style.display = 'block'
+        video.currentTime = 0
+        video.muted = true
+        video.play()
+
+        soundBtn.style.display = 'block'
+      })
+
+      marker1.addEventListener('markerFound', () => {
+        popup.style.display = 'block'
+        video.currentTime = 0
+        video.muted = true
+        video.play()
+
+        soundBtn.style.display = 'block'
+      })
+
+      marker2.addEventListener('markerFound', () => {
+        popup.style.display = 'block'
+        video.currentTime = 0
+        video.muted = true
+        video.play()
+
+        soundBtn.style.display = 'block'
+      })
+
+      marker.addEventListener('markerLost', () => {
+        popup.style.display = 'none'
+        video.pause()
+        soundBtn.style.display = 'none'
+      })
+
+      marker1.addEventListener('markerLost', () => {
+        popup.style.display = 'none'
+        video.pause()
+        soundBtn.style.display = 'none'
+      })
+
+      marker2.addEventListener('markerLost', () => {
+        popup.style.display = 'none'
+        video.pause()
+        soundBtn.style.display = 'none'
+      })
+
+      soundBtn.addEventListener('click', () => {
+        video.muted = false
+        video.play()
+        soundBtn.style.display = 'none'
+      })
+
+      window.addEventListener('resize', () => {
+        const scene = document.querySelector('a-scene')
+        if (scene && scene.resize) scene.resize()
+      })
+
+      window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+          const scene = document.querySelector('a-scene')
+          if (scene && scene.resize) scene.resize()
+        }, 300)
+      })
+    </script>
+  </body>
+</html>

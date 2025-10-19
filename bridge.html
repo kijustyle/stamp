@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>다리를 연결하세요</title>
+    <style>
+      :root {
+        --snap-gap: 22px; /* 좌우 허용 거리 */
+        --snap-vert: 26px; /* 위아래 허용 거리 */
+      }
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        margin: 0;
+        background: #fff;
+        color: #222;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto,
+          Apple SD Gothic Neo, Malgun Gothic, sans-serif;
+      }
+
+      /* 로딩 스피너 스타일 */
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+      }
+
+      .loading-overlay.hidden {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      .dmz-spinner {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin-bottom: 30px;
+      }
+
+      /* 철조망 회전 원 */
+      .wire-circle {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 3px solid #666;
+        border-radius: 50%;
+        border-style: dashed;
+        animation: wireRotate 3s linear infinite;
+      }
+
+      .wire-circle:nth-child(1) {
+        animation-delay: 0s;
+        opacity: 0.8;
+      }
+
+      .wire-circle:nth-child(2) {
+        width: 80%;
+        height: 80%;
+        top: 10%;
+        left: 10%;
+        animation-delay: -1s;
+        animation-direction: reverse;
+        opacity: 0.6;
+      }
+
+      .wire-circle:nth-child(3) {
+        width: 60%;
+        height: 60%;
+        top: 20%;
+        left: 20%;
+        animation-delay: -2s;
+        opacity: 0.4;
+      }
+
+      /* 중앙 평화 심볼 */
+      .peace-dove {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        background: #fff;
+        border-radius: 50% 0 50% 50%;
+        animation: doveFloat 2s ease-in-out infinite alternate;
+      }
+
+      .peace-dove::before {
+        content: '';
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        width: 8px;
+        height: 8px;
+        background: #333;
+        border-radius: 50%;
+      }
+
+      .peace-dove::after {
+        content: '';
+        position: absolute;
+        top: 15px;
+        right: -5px;
+        width: 15px;
+        height: 8px;
+        background: #fff;
+        border-radius: 50%;
+        transform: rotate(-20deg);
+      }
+
+      .loading-text {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2d5a3d;
+        text-align: center;
+        line-height: 1.5;
+        animation: textPulse 2s ease-in-out infinite;
+      }
+
+      .loading-subtext {
+        font-size: 14px;
+        color: #5a7a6a;
+        margin-top: 10px;
+        text-align: center;
+      }
+
+      @keyframes wireRotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes doveFloat {
+        from {
+          transform: translate(-50%, -50%) translateY(-3px);
+        }
+        to {
+          transform: translate(-50%, -50%) translateY(3px);
+        }
+      }
+
+      @keyframes textPulse {
+        0%, 100% {
+          opacity: 0.8;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      /* 기존 스타일들 */
+      header {
+        padding: 14px 16px 4px;
+        text-align: center;
+      }
+      h1 {
+        margin: 0 0 6px 0;
+        font-size: 20px;
+      }
+      p.hint {
+        margin: 0;
+        color: #777;
+        font-size: 13px;
+      }
+
+      .stage {
+        position: relative;
+        background:#fff url("img/brigde_bg.png") center/cover no-repeat !important;
+        width: min(98vw, 780px); /* 좌우 공간 넓힘 */
+        height: clamp(500px, 44vw, 340px);
+        margin: 12px auto 18px;
+        border-radius: 14px;
+        background: #fff;
+        overflow: hidden;
+        touch-action: none; /* 스크롤-드래그 충돌 방지 */
+      }
+
+      .piece {
+        position: absolute;
+        width: clamp(90px, 40vw, 120px); /* 반응형 축소 */
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-user-drag: none;
+        -webkit-touch-callout: none;
+        pointer-events: auto;
+        touch-action: none;
+        cursor: grab;
+        will-change: left, top, transform, filter;
+        transition: box-shadow 0.15s ease;
+        filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.08));
+      }
+      .piece:active {
+        cursor: grabbing;
+      }
+      .piece.snapping {
+        transition: left 0.28s cubic-bezier(0.25, 0.8, 0.3, 1),
+          top 0.28s cubic-bezier(0.25, 0.8, 0.3, 1), transform 0.28s;
+      }
+      .piece.connected {
+        cursor: default;
+      }
+
+      #msg {
+        text-align: center;
+        font-weight: 700;
+        color: #1a7f37;
+        display: none;
+        margin-bottom: 10px;
+      }
+
+      /* 스냅 순간 반짝임 */
+      @keyframes flash {
+        0% {
+          filter: none;
+        }
+        40% {
+          filter: drop-shadow(0 0 14px rgba(46, 204, 113, 0.9));
+        }
+        100% {
+          filter: none;
+        }
+      }
+      .flash {
+        animation: flash 0.6s ease;
+      }
+
+      /* 중앙 자석 라인(시각적 힌트는 투명) */
+      .magnet {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(
+            closest-side,
+            rgba(26, 127, 55, 0.08),
+            rgba(26, 127, 55, 0) 60%
+          )
+          center / 2px 100% no-repeat;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      .hintOn .magnet {
+        opacity: 0.6;
+      } /* 근접 시만 살짝 보임 (연한 느낌) */
+
+      
+    </style>
+  </head>
+  <body>
+    <!-- 로딩 스피너 -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="dmz-spinner">
+        <div class="wire-circle"></div>
+        <div class="wire-circle"></div>
+        <div class="wire-circle"></div>
+        <div class="peace-dove"></div>
+      </div>
+      <div class="loading-text">
+        분단의 다리를 잇는 중...<br>
+        평화의 연결을 준비합니다
+      </div>
+      <div class="loading-subtext">
+        잠시만 기다려주세요
+      </div>
+    </div>
+
+    <header>
+      <h1>철길 다리를 연결하세요</h1>
+      <p class="hint">가까이 끌어오면 자석처럼 붙습니다.</p>
+    </header>
+
+    <div class="stage" id="stage">
+      <div class="magnet" aria-hidden="true"></div>
+      <img
+        id="left"
+        class="piece"
+        alt="왼쪽 다리"
+        src="./img/bridge_1.png"
+        draggable="false"
+        width="90%"
+      />
+      <img
+        id="right"
+        class="piece"
+        alt="오른쪽 다리"
+        src="./img/bridge_2.png"
+        draggable="false"
+      />
+    </div>
+
+
+    <div id="msg">✅ 다리가 연결되었습니다!</div>
+    <script>
+      const stage = document.getElementById('stage')
+      const left = document.getElementById('left')
+      const right = document.getElementById('right')
+      const msg = document.getElementById('msg')
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      let audioReady = false;
+
+      let bridgeCompleted = false;
+
+      const SNAP_GAP =
+        parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue(
+            '--snap-gap'
+          )
+        ) || 22
+      const SNAP_VERT =
+        parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue(
+            '--snap-vert'
+          )
+        ) || 26
+
+      // 이미지들이 모두 로드되었는지 확인하는 함수
+      function waitForImages() {
+        return new Promise((resolve) => {
+          const images = [
+            document.getElementById('left'),
+            document.getElementById('right'),
+          ];
+          
+          let loadedCount = 0;
+          const totalImages = images.length;
+          
+          function checkAllLoaded() {
+            loadedCount++;
+            if (loadedCount >= totalImages) {
+              // 모든 이미지가 로드되면 추가로 1초 대기 후 스피너 제거
+              setTimeout(() => {
+                loadingOverlay.classList.add('hidden');
+                setTimeout(() => {
+                  loadingOverlay.style.display = 'none';
+                }, 500);
+              }, 1000);
+            }
+          }
+          
+          images.forEach(img => {
+            if (img.complete) {
+              checkAllLoaded();
+            } else {
+              img.addEventListener('load', checkAllLoaded);
+              img.addEventListener('error', checkAllLoaded); // 에러 시에도 진행
+            }
+          });
+          
+          // 최대 5초 후에는 강제로 스피너 제거
+          setTimeout(() => {
+            loadingOverlay.classList.add('hidden');
+            setTimeout(() => {
+              loadingOverlay.style.display = 'none';
+            }, 500);
+          }, 5000);
+        });
+      }
+
+      function layout() {
+        const r = stage.getBoundingClientRect()
+        const y = r.height * 0.83
+        left.style.left = r.width * 0.0 + 'px'
+        left.style.top = y - left.offsetHeight * 0.37 + 'px'
+        right.style.left = r.width * 0.70 + 'px'
+        right.style.top = y - right.offsetHeight * 0.37 + 'px'
+      }
+
+      function clamp(el, nx, ny) {
+        const r = stage.getBoundingClientRect()
+        const w = el.offsetWidth,
+          h = el.offsetHeight
+        const centerX = r.width / 2  // 중심선
+        
+        let x, y
+        
+        if (el.id === 'left') {
+          // 왼쪽 다리: 0부터 중심선까지만 이동 가능
+          x = Math.min(Math.max(nx, 0), centerX - w)
+        } else if (el.id === 'right') {
+          // 오른쪽 다리: 중심선부터 오른쪽 끝까지만 이동 가능
+          x = Math.min(Math.max(nx, centerX), r.width - w)
+        } else {
+          // 기본값 (혹시 다른 요소가 있을 경우)
+          x = Math.min(Math.max(nx, 0), r.width - w)
+        }
+        
+        // 세로는 기존대로
+        y = Math.min(Math.max(ny, 0), r.height - h)
+        
+        el.style.left = x + 'px'
+        el.style.top = y + 'px'
+      }
+
+      function nearEnough() {
+        const lr = left.getBoundingClientRect()
+        const rr = right.getBoundingClientRect()
+        const sr = stage.getBoundingClientRect()
+        const leftRightEdge = lr.left - sr.left + lr.width
+        const rightLeftEdge = rr.left - sr.left
+        const dx = Math.abs(leftRightEdge - rightLeftEdge)
+        const dy = Math.abs(lr.top + lr.height / 2 - (rr.top + rr.height / 2))
+        return { ok: dx < SNAP_GAP && dy < SNAP_VERT, dx, dy }
+      }
+
+      function snapConnect() {
+        const sr = stage.getBoundingClientRect()
+        const seamX = sr.width / 2
+
+        ;[left, right].forEach((el) => el.classList.add('snapping'))
+        left.style.left = seamX - left.offsetWidth + 'px'
+        right.style.left = seamX + 'px'
+        right.style.top = left.style.top
+        ;[left, right].forEach((el) => (el.style.transform = 'scale(1.02)')) // 살짝 확대(오버슈트)
+
+        setTimeout(() => {
+          ;[left, right].forEach((el) => {
+            el.style.transform = 'scale(1)' // 안착
+            el.classList.remove('snapping')
+            el.classList.add('connected', 'flash')
+          })
+          msg.style.display = 'block'
+          if (navigator.vibrate) navigator.vibrate(20) // 미세 진동
+        }, 280)
+      }
+
+      function check() {
+        const { ok, dx } = nearEnough()
+        
+        stage.classList.toggle('hintOn', dx < SNAP_GAP * 2)
+        
+        if (ok) {
+          snapConnect()
+          
+          setTimeout(() => {
+            localStorage.setItem('new-completion', 'peace-bridge');
+            alert('축하합니다! 스탬프를 획득했습니다.');
+            window.close();
+          }, 2000);
+        }
+      }
+
+      function getProgress() {
+        const saved = localStorage.getItem('dmz-tour-progress');
+        return saved ? JSON.parse(saved) : {};
+      }
+
+      function attachDrag(el) {
+        let dragging = false,
+          offX = 0,
+          offY = 0
+
+        const down = (e) => {
+          if (el.classList.contains('connected')) return
+          
+          dragging = true
+          el.setPointerCapture(e.pointerId)
+          const sr = stage.getBoundingClientRect()
+          const r = el.getBoundingClientRect()
+          offX = e.clientX - r.left
+          offY = e.clientY - r.top
+        }
+        const move = (e) => {
+          if (!dragging) return
+          const sr = stage.getBoundingClientRect()
+          clamp(el, e.clientX - sr.left - offX, e.clientY - sr.top - offY)
+          check()
+        }
+        const up = () => {
+          if (!dragging) return
+          dragging = false
+          check()
+        }
+
+        el.addEventListener('pointerdown', down)
+        window.addEventListener('pointermove', move, { passive: false })
+        window.addEventListener('pointerup', up)
+      }
+
+      attachDrag(left)
+      attachDrag(right)
+
+      // 페이지 로드 완료 시 스피너 제거
+      window.addEventListener('load', () => {
+        layout();
+        waitForImages();
+      });
+      
+      window.addEventListener('resize', layout)
+    </script>
+  </body>
+</html>

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DMZ 포토부스</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background: #000;
+        }
+
+        /* 전체 컨테이너 */
+        .photo-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 1층: 카메라 레이어 (맨 아래) */
+        .camera-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 전면 카메라: 좌우 반전 + 0.5배 줌 + 약간 위로 이동 */
+        #video.front-camera {
+            transform: scaleX(-1) scale(0.5) translateY(-20%);
+        }
+
+        /* 2층: 오버레이 이미지 (중간) */
+        .overlay-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .overlay-layer img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 3층: 촬영된 사진 표시 */
+        #capturedImage {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 3;
+            display: none;
+        }
+
+        /* 플래시 효과 */
+        .flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .flash.active {
+            animation: flashEffect 0.3s;
+        }
+
+        @keyframes flashEffect {
+            0% { opacity: 0; }
+            50% { opacity: 0.9; }
+            100% { opacity: 0; }
+        }
+
+        /* 버튼 컨트롤 */
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+
+        .btn-capture {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-retake {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-close {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 카메라 전환 버튼 */
+        .camera-switch-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 100;
+            display: none;
+        }
+
+        /* 상태 메시지 */
+        .status {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 14px;
+            z-index: 100;
+            display: none;
+        }
+
+        /* 로딩 */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            z-index: 200;
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        canvas {
+            display: none;
+        }
+
+        /* 색종이 효과 */
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            animation: fall 3s linear forwards;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="photo-container">
+        <!-- 로딩 화면 -->
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <div>카메라 준비 중...</div>
+        </div>
+
+        <!-- 1. 카메라 레이어 -->
+        <div class="camera-layer">
+            <video id="video" autoplay playsinline></video>
+        </div>
+
+        <!-- 2. 오버레이 이미지 -->
+        <div class="overlay-layer">
+            <img src="img/dmz-background.png" alt="DMZ 배경" id="overlayImg">
+        </div>
+
+        <!-- 3. 촬영된 사진 -->
+        <img id="capturedImage" alt="촬영된 사진">
+
+        <!-- 플래시 -->
+        <div class="flash" id="flash"></div>
+
+        <!-- 상태 메시지 -->
+        <div class="status" id="status"></div>
+
+        <!-- 카메라 전환 버튼 -->
+        <button class="camera-switch-btn" id="cameraSwitchBtn" onclick="switchCamera()">🔄</button>
+
+        <!-- 컨트롤 버튼 -->
+        <div class="controls" id="controls" style="display: none;">
+            <button class="btn btn-capture" id="captureBtn" onclick="capturePhoto()">✨ 촬영</button>
+            <button class="btn btn-retake" id="retakeBtn" onclick="retakePhoto()" style="display:none;">🔄 다시</button>
+            <button class="btn btn-save" id="saveBtn" onclick="savePhoto()" style="display:none;">💾 다운로드</button>
+            <button class="btn btn-save" id="shareBtn" onclick="sharePhoto()" style="display:none;">📤 공유</button>
+            <button class="btn btn-close" id="closeBtn" onclick="closePage()" style="display:none;">✕ 닫기</button>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+    <div class="celebration" id="celebration"></div>
+
+    <script>
+        // 전역 변수
+        let stream = null;
+        let capturedImageData = null;
+        let currentFacingMode = 'environment'; // 'user' = 전면, 'environment' = 후면
+
+        // 요소 참조
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const overlayImg = document.getElementById('overlayImg');
+        const capturedImage = document.getElementById('capturedImage');
+        const loading = document.getElementById('loading');
+        const status = document.getElementById('status');
+        const controls = document.getElementById('controls');
+        const cameraSwitchBtn = document.getElementById('cameraSwitchBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const retakeBtn = document.getElementById('retakeBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const flash = document.getElementById('flash');
+
+        // 페이지 로드 시 카메라 시작
+        window.addEventListener('load', startCamera);
+
+        // 카메라 시작
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: currentFacingMode,
+                        width: { ideal: 1080 },
+                        height: { ideal: 1920 }
+                    }
+                });
+
+                video.srcObject = stream;
+
+                video.onloadedmetadata = () => {
+                    loading.style.display = 'none';
+                    controls.style.display = 'flex';
+                    cameraSwitchBtn.style.display = 'block';
+                    
+                    // 전면 카메라면 클래스 추가
+                    if (currentFacingMode === 'user') {
+                        video.classList.add('front-camera');
+                    } else {
+                        video.classList.remove('front-camera');
+                    }
+                    
+                    showStatus('포즈를 잡고 촬영 버튼을 눌러주세요! 😊');
+                };
+            } catch (error) {
+                console.error('카메라 오류:', error);
+                loading.innerHTML = '<div>❌ 카메라 접근 실패</div><div style="font-size: 14px; margin-top: 10px;">카메라 권한을 허용해주세요</div>';
+            }
+        }
+
+        // 카메라 전환
+        async function switchCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+
+            // 전면 <-> 후면 전환
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            
+            await startCamera();
+            
+            const cameraName = currentFacingMode === 'user' ? '전면' : '후면';
+            showStatus(`${cameraName} 카메라로 전환! 📸`);
+        }
+
+        // 사진 촬영
+        function capturePhoto() {
+            // 플래시
+            flash.classList.add('active');
+            setTimeout(() => flash.classList.remove('active'), 300);
+
+            // 캔버스 크기 = 화면 크기
+            const container = document.querySelector('.photo-container');
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+
+            // 1단계: 카메라 영상 그리기
+            if (currentFacingMode === 'user') {
+                // 전면 카메라: 좌우반전 + 0.5배 축소 + 위로 이동
+                ctx.save();
+                
+                // 전체를 검은색으로 채우기
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 비디오 비율 유지하며 크기 계산
+                const scale = 0.5;
+                const videoAspect = video.videoWidth / video.videoHeight;
+                
+                // 비디오를 화면 크기에 맞춰서 계산
+                let videoWidth = canvas.width;
+                let videoHeight = canvas.width / videoAspect;
+                
+                // 높이가 부족하면 높이 기준으로 재계산
+                if (videoHeight < canvas.height) {
+                    videoHeight = canvas.height;
+                    videoWidth = canvas.height * videoAspect;
+                }
+                
+                // 0.5배 축소 적용
+                videoWidth *= scale;
+                videoHeight *= scale;
+                
+                const x = (canvas.width - videoWidth) / 2;
+                const y = (canvas.height - videoHeight) / 2 - (videoHeight * 0.2); // 약간 위로 이동
+                
+                // 좌우 반전
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                
+                // 비디오 그리기
+                ctx.drawImage(video, x, y, videoWidth, videoHeight);
+                
+                ctx.restore();
+            } else {
+                // 후면 카메라: 비율 유지하며 전체 화면 채우기
+                const videoAspect = video.videoWidth / video.videoHeight;
+                const canvasAspect = canvas.width / canvas.height;
+                
+                let drawWidth, drawHeight, offsetX, offsetY;
+                
+                if (videoAspect > canvasAspect) {
+                    // 비디오가 더 넓은 경우: 높이 기준
+                    drawHeight = canvas.height;
+                    drawWidth = canvas.height * videoAspect;
+                    offsetX = (canvas.width - drawWidth) / 2;
+                    offsetY = 0;
+                } else {
+                    // 비디오가 더 좁은 경우: 너비 기준
+                    drawWidth = canvas.width;
+                    drawHeight = canvas.width / videoAspect;
+                    offsetX = 0;
+                    offsetY = (canvas.height - drawHeight) / 2;
+                }
+                
+                ctx.drawImage(video, offsetX, offsetY, drawWidth, drawHeight);
+            }
+
+            // 2단계: 오버레이 이미지 합성
+            ctx.drawImage(overlayImg, 0, 0, canvas.width, canvas.height);
+
+            // 3단계: 결과 저장
+            capturedImageData = canvas.toDataURL('image/png');
+            capturedImage.src = capturedImageData;
+            capturedImage.style.display = 'block';
+
+            // 버튼 전환
+            captureBtn.style.display = 'none';
+            retakeBtn.style.display = 'inline-block';
+            saveBtn.style.display = 'inline-block';
+            shareBtn.style.display = 'inline-block';
+            closeBtn.style.display = 'inline-block';
+
+            showStatus('멋진 사진! 📸');
+            createConfetti(30);
+            
+            // 스탬프 획득 이벤트 (localStorage 대신 sessionStorage 사용)
+            setTimeout(() => {
+                try {
+                    // sessionStorage는 탭/창을 닫으면 자동 삭제됨
+                    sessionStorage.setItem('new-completion', 'peace-path');
+                    showStatus('🎉 축하합니다! 스탬프를 획득했습니다! 🎉');
+                    createConfetti(50);
+                } catch (e) {
+                    console.log('Storage not available:', e);
+                }
+            }, 1000);
+        }
+
+        // 다시 찍기
+        function retakePhoto() {
+            capturedImage.style.display = 'none';
+            
+            captureBtn.style.display = 'inline-block';
+            captureBtn.disabled = false;
+            retakeBtn.style.display = 'none';
+            saveBtn.style.display = 'none';
+            shareBtn.style.display = 'none';
+            closeBtn.style.display = 'none';
+            
+            // 카메라 다시 활성화 (스트림이 없으면)
+            if (!stream || !stream.active) {
+                startCamera();
+            } else {
+                // 스트림이 활성화되어 있으면 비디오 표시만
+                video.style.display = 'block';
+            }
+            
+            showStatus('다시 포즈를 잡아주세요! 😊');
+        }
+
+        // 페이지 닫기
+        function closePage() {
+            if (window.opener) {
+                window.close();
+            } else if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.close();
+            }
+        }
+
+        // 다운로드
+        function savePhoto() {
+            const link = document.createElement('a');
+            link.download = `DMZ-${Date.now()}.png`;
+            link.href = capturedImageData;
+            link.click();
+            
+            showStatus('사진 다운로드 완료! 💾');
+        }
+
+        // 공유
+        async function sharePhoto() {
+            try {
+                const response = await fetch(capturedImageData);
+                const blob = await response.blob();
+                const file = new File([blob], `DMZ-${Date.now()}.png`, { type: 'image/png' });
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'DMZ 완주 기념',
+                        text: 'DMZ 완주 기념 사진! 🎉'
+                    });
+                    showStatus('공유 완료! 📤');
+                } else {
+                    savePhoto();
+                }
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    savePhoto();
+                }
+            }
+        }
+
+        // 상태 메시지 표시
+        function showStatus(message) {
+            status.textContent = message;
+            status.style.display = 'block';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        // 색종이 효과
+        function createConfetti(count) {
+            const celebration = document.getElementById('celebration');
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    
+                    celebration.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 30);
+            }
+        }
+
+        // 페이지 떠날 때 카메라 정리
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>카드 수집 시스템</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      overflow: hidden;
+      perspective: 1000px;
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+    }
+    
+    /* 카드 뽑기 버튼 */
+    .draw-button {
+      padding: 15px 40px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #fff;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s;
+      margin-bottom: 50px;
+      z-index: 100;
+    }
+    
+    .draw-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+    }
+    
+    .draw-button:active {
+      transform: translateY(-1px);
+    }
+    
+    .draw-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    /* 카드 컨테이너 */
+    .card-container {
+      position: relative;
+      width: 150px;
+      height: 200px;
+      margin-bottom: 100px;
+    }
+    
+    .card {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      left: 0;
+      top: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 15px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 60px;
+      cursor: pointer;
+      transform-origin: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      transition: filter 0.3s;
+    }
+    
+    .card:hover {
+      filter: brightness(1.2) drop-shadow(0 0 20px rgba(255,215,0,0.8));
+    }
+    
+    /* 카드 등장 애니메이션 */
+    @keyframes appearCard {
+      0% {
+        transform: translateY(-300px) rotate(0deg) scale(0.5);
+        opacity: 0;
+      }
+      70% {
+        transform: translateY(-20px) rotate(1080deg) scale(1.05);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(0) rotate(1080deg) scale(1);
+        opacity: 1;
+      }
+    }
+    
+    .animate-appear {
+      animation: appearCard 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    
+    /* 카드 수집 애니메이션 (아래로) */
+    @keyframes collectCard {
+      0% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(20px, 500px) rotate(2160deg) scale(0.1);
+        opacity: 0;
+      }
+    }
+    
+    .animate-collect {
+      animation: collectCard 1.2s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+    
+    /* 반짝이는 파티클 */
+    .sparkle {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,215,0,0.8) 50%, transparent 100%);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: sparkleFloat 1.2s ease-out forwards;
+      box-shadow: 0 0 10px rgba(255,215,0,0.8);
+    }
+    
+    @keyframes sparkleFloat {
+      0% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(0.3) translateY(100px);
+      }
+    }
+    
+    /* 꼬리 효과 */
+    .trail {
+      position: fixed;
+      width: 3px;
+      height: 60px;
+      background: linear-gradient(to bottom, 
+        rgba(255,215,0,0.9) 0%,
+        rgba(255,255,150,0.6) 30%,
+        transparent 100%);
+      pointer-events: none;
+      animation: trailFade 1s ease-out forwards;
+      filter: blur(1px);
+    }
+    
+    @keyframes trailFade {
+      0% {
+        opacity: 1;
+        height: 60px;
+      }
+      100% {
+        opacity: 0;
+        height: 20px;
+      }
+    }
+    
+    /* 수집함 */
+    .collection-box {
+      position: fixed;
+      bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px 30px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255,255,255,0.2);
+    }
+    
+    .collection-icon {
+      font-size: 30px;
+    }
+    
+    .collection-count {
+      color: #fff;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    
+    /* 수집 효과 */
+    @keyframes collectPulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.2);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    
+    .pulse {
+      animation: collectPulse 0.3s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <button class="draw-button" id="drawButton">🎴 카드 뽑기</button>
+  
+  <div class="card-container" id="cardContainer">
+    <!-- 카드가 여기에 동적으로 생성됨 -->
+  </div>
+  
+  <div class="collection-box" id="collectionBox">
+    <div class="collection-icon">📦</div>
+    <div class="collection-count">수집: <span id="cardCount">0</span></div>
+  </div>
+  
+  <script>
+    const drawButton = document.getElementById("drawButton");
+    const cardContainer = document.getElementById("cardContainer");
+    const cardCountEl = document.getElementById("cardCount");
+    const collectionBox = document.getElementById("collectionBox");
+    
+    let cardCount = 0;
+    let isDrawing = false;
+    
+    const cardEmojis = ["🌟", "💎", "🔥", "⚡", "🌈", "🎯", "🏆", "👑", "🦄", "🐉"];
+    
+    // 카드 뽑기
+    drawButton.addEventListener("click", () => {
+      if (isDrawing) return;
+      isDrawing = true;
+      drawButton.disabled = true;
+      
+      // 새 카드 생성
+      const card = document.createElement("div");
+      card.className = "card animate-appear";
+      const randomEmoji = cardEmojis[Math.floor(Math.random() * cardEmojis.length)];
+      card.textContent = randomEmoji;
+      
+      cardContainer.appendChild(card);
+      
+      // 등장 애니메이션 완료 후
+      setTimeout(() => {
+        isDrawing = false;
+        drawButton.disabled = false;
+        
+        // 카드 클릭 이벤트
+        card.addEventListener("click", () => {
+          collectCard(card);
+        });
+      }, 700);
+    });
+    
+    // 카드 수집
+    function collectCard(card) {
+      card.style.pointerEvents = "none";
+      card.classList.remove("animate-appear");
+      card.classList.add("animate-collect");
+      
+      // 반짝이 파티클 생성
+      const sparkleInterval = setInterval(() => {
+        createSparkle(card);
+      }, 50);
+      
+      // 꼬리 효과 생성
+      const trailInterval = setInterval(() => {
+        createTrail(card);
+      }, 80);
+      
+      // 1초 후 파티클 생성 중단
+      setTimeout(() => {
+        clearInterval(sparkleInterval);
+        clearInterval(trailInterval);
+      }, 1000);
+      
+      // 애니메이션 종료 후
+      setTimeout(() => {
+        card.remove();
+        cardCount++;
+        cardCountEl.textContent = cardCount;
+        
+        // 수집함 펄스 효과
+        collectionBox.classList.add("pulse");
+        setTimeout(() => {
+          collectionBox.classList.remove("pulse");
+        }, 300);
+      }, 1000);
+    }
+    
+    function createSparkle(card) {
+      const sparkle = document.createElement("div");
+      sparkle.className = "sparkle";
+      
+      const rect = card.getBoundingClientRect();
+      sparkle.style.left = rect.left + rect.width / 2 + (Math.random() - 0.5) * 60 + "px";
+      sparkle.style.top = rect.top + rect.height / 2 + (Math.random() - 0.5) * 60 + "px";
+      
+      const size = 4 + Math.random() * 6;
+      sparkle.style.width = size + "px";
+      sparkle.style.height = size + "px";
+      sparkle.style.animationDuration = (0.8 + Math.random() * 0.6) + "s";
+      
+      document.body.appendChild(sparkle);
+      
+      setTimeout(() => {
+        sparkle.remove();
+      }, 1500);
+    }
+    
+    function createTrail(card) {
+      const trail = document.createElement("div");
+      trail.className = "trail";
+      
+      const rect = card.getBoundingClientRect();
+      trail.style.left = rect.left + rect.width / 2 + "px";
+      trail.style.top = rect.top + rect.height / 2 + "px";
+      
+      document.body.appendChild(trail);
+      
+      setTimeout(() => {
+        trail.remove();
+      }, 1000);
+    }
+  </script>
+</body>
+</html>

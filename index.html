@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+    />
+
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <title>2025 DMZ 오픈레이스 - 광복 80주년 기념</title>
+    <script src="js/section-control.js"></script>
+    <script src="js/user-info.js"></script>
+    <script src="js/url-unlock.js"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <script>
+      function startCamera() {
+        // iOS에서만 작동 (사용자 동의 필요)
+        window.location.href = "camera.html";
+      }
+
+    </script>
+  </head>
+  <body>
+    <!-- 네비게이션 도트 -->
+    <!-- <div class="nav-dots">
+        <div class="nav-dot active" onclick="scrollToSection('start')"></div>
+        <div class="nav-dot" onclick="scrollToSection('peace-gate')"></div>
+        <div class="nav-dot" onclick="scrollToSection('hidden-land')"></div>
+        <div class="nav-dot" onclick="scrollToSection('wind-hill')"></div>
+        <div class="nav-dot" onclick="scrollToSection('flowers')"></div>
+        <div class="nav-dot" onclick="scrollToSection('peace-bridge')"></div>
+        <div class="nav-dot" onclick="scrollToSection('millennium')"></div>
+        <div class="nav-dot" onclick="scrollToSection('forgotten-village')"></div>
+        <div class="nav-dot" onclick="scrollToSection('iron-horse')"></div>
+        <div class="nav-dot" onclick="scrollToSection('peace-promise')"></div>
+        <div class="nav-dot" onclick="scrollToSection('nature-secret')"></div>
+        <div class="nav-dot" onclick="scrollToSection('peace-path')"></div>
+        <div class="nav-dot" onclick="scrollToSection('complete')"></div>
+    </div> -->
+
+    <!-- 시작 페이지 -->
+    <section id="start" class="section">
+      <img src="img/start-logo.png" alt="">
+      <!-- <h1>🕊️ 2025 DMZ 오픈레이스</h1>
+      <p class="subtitle">광복 80주년 기념 평화 스탬프 투어</p> -->
+      <!-- <p style="margin-bottom: 2rem">
+        임진각평화누리공원에서 시작하는 특별한 여정
+      </p> -->
+      <a href="#" onclick="startCamera()" class="start-btn">QR 코드 스캔하기</a>
+    </section>
+
+    <!-- 1. 평화의 문을 열다 -->
+    <section id="peace-gate" class="section">
+      <div class="lock-overlay" onclick="showQRNotice()">
+        <div class="lock-content">
+          <div class="lock-icon">🔒</div>
+          <h3 class="lock-title">미션 잠금</h3>
+          <p class="lock-message">
+            지정된 장소에서<br>
+            <strong>QR 코드를 스캔</strong>해주세요
+          </p>
+          <button class="lock-btn">QR 스캔하러 가기</button>
+        </div>
+      </div>
+      <div class="quiz-container">
+        <h2 class="quiz-title">🚪 평화의 문을 열다</h2>
+
+        <div class="quiz-info">
+          DMZ(Demilitarized Zone, 비무장지대)는 1953년 휴전협정 이후 남북한을
+          분리하는 군사분계선을 중심으로 설정된 완충지대입니다. 폭 4km, 길이
+          248km에 달하는 이 지역은 70년 넘게 사람의 발길이 닿지 않아 의도치 않게
+          생태계의 보고가 되었으며, 동시에 분단의 아픔과 평화통일의 염원이
+          공존하는 상징적 공간입니다."
+        </div>
+
+        <div class="question-box">
+          <p><strong>Q. DMZ는 왜 생겼을까요?</strong></p>
+          <ul class="answer-list" data-quiz="peace-gate" data-correct="2">
+            <li data-answer="0">1. 세계평화실현으로 지정되기 위해</li>
+            <li data-answer="1">2. 동물 보호 구역을 만들기 위해</li>
+            <li data-answer="2">3. 전쟁 후 군사 충돌을 막기 위해</li>
+            <li data-answer="3">4. 자유롭게 국경을 넘기 위해</li>
+          </ul>
+          <div class="quiz-result" id="quiz-result-peace-gate"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 숨겨진 땅, DMZ -->
+    <section id="hidden-land" class="section">
+      <div class="lock-overlay" onclick="showQRNotice()">
+        <div class="lock-content">
+          <div class="lock-icon">🔒</div>
+          <h3 class="lock-title">미션 잠금</h3>
+          <p class="lock-message">
+            지정된 장소에서<br>
+            <strong>QR 코드를 스캔</strong>해주세요
+          </p>
+          <button class="lock-btn">QR 스캔하러 가기</button>
+        </div>
+      </div>
+      <div class="quiz-container">
+        <h2 class="quiz-title">🗺️ 숨겨진 땅, DMZ</h2>
+
+        <div class="ar-info">
+          <strong>📱 AR 콘텐츠</strong>
+          <ul class="ar-steps">
+            <li>AR마커 인식</li>
+            <li>배경 설명 듣기</li>
+            <li>캐릭터 카드 수집</li>
+          </ul>
+        </div>
+
+        <div class="quiz-info">
+          "DMZ는 단순히 출입금지구역이 아닌, 생명과 역사가 숨 쉬는 공간"임을
+          AR을 통해 직관적으로 이해하고, AR 콘텐츠를 통해 DMZ 지역과 주요
+          생태·역사 장소들을 AR로 시각화하여, 참가자들이 "비워져 있지만 살아있는
+          공간"이라는 시념을 체험할 수 있는 프로그램입니다.노루미 캐릭터와 함께
+          설명을 듣는 교육적 체험을 제공합니다. 우측 하단의 노루미 캐릭터가
+          DMZ의 자연 생태계를 대표하는 마스코트 역할을 합니다.
+        </div>
+
+        <button class="ar-btn" onclick="openARExperience()">AR체험 시작</button>
+      </div>
+    </section>
+
+    <!-- 3. 바람의 언덕, 희망의 바람 -->
+    <section id="wind-hill" class="section">
+      <div class="lock-overlay" onclick="showQRNotice()">
+        <div class="lock-content">
+          <div class="lock-icon">🔒</div>
+          <h3 class="lock-title">미션 잠금</h3>
+          <p class="lock-message">
+            지정된 장소에서<br>
+            <strong>QR 코드를 스캔</strong>해주세요
+          </p>
+          <button class="lock-btn">QR 스캔하러 가기</button>
+        </div>
+      </div>
+      <div class="quiz-container">
+        <h2 class="quiz-title">🌬️ 바람의 언덕, 희망의 바람</h2>
+        <div class="quiz-info">
+          "바람의 언덕"은 DMZ 지역의 자연환경을 상징하며, 분단의 아픔 속에서도
+          자연이 주는 평화로움을 표현합니다. 언덕이라는 공간은 더 넓은 시야와
+          미래에 대한 전망을 의미하고, 바람은 경계를 넘나드는 자유로운 존재로서
+          분단을 넘어선 소통과 화합을 상징합니다. "희망의 바람"은 DMZ에서
+          불어오는 바람을 통해 평화와 통일에 대한 희망을 전달하며, 과거의 아픔을
+          딛고 미래를 향한 긍정적 메시지를 담고 있습니다. 또한 자연 그대로의
+          DMZ가 주는 치유와 회복의 의미를 나타냅니다.
+        </div>
+
+        <div class="question-box">
+          <p>
+            <strong>Q. 저어새는 어떤 이유로 멸종위기에 처해 있을까요?</strong>
+          </p>
+          <ul class="answer-list" data-quiz="wind-hill" data-correct="1">
+            <li data-answer="0">1. 너무 날씨가 추워서</li>
+            <li data-answer="1">2. 인간의 활동으로 서식지가 줄어서</li>
+            <li data-answer="2">3. 자연에서 먹지 못 살아서</li>
+            <li data-answer="3">4. 바다를 싫어해서</li>
+          </ul>
+          <div class="quiz-result" id="quiz-result-wind-hill"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 철책을 넘는 꽃들 -->
+    <section id="flowers" class="section">
+      <div class="lock-overlay" onclick="showQRNotice()">
+        <div class="lock-content">
+          <div class="lock-icon">🔒</div>
+          <h3 class="lock-title">미션 잠금</h3>
+          <p class="lock-message">
+            지정된 장소에서<br>
+            <strong>QR 코드를 스캔</strong>해주세요
+          </p>
+          <button class="lock-btn">QR 스캔하러 가기</button>
+        </div>
+      </div>
+      <div class="quiz-container">
+        <h2 class="quiz-title">🌸 철책을 넘는 꽃들</h2>
+
+        <div class="ar-info">
+          <strong>📱 AR 콘텐츠 이용 방법</strong>
+          <ul class="ar-steps">
+            <li>AR마커를 찾아 인식하세요</li>
+            <li>캐릭터 설명 듣기</li>
+            <li>캐릭터 카드 수집</li>
+          </ul>
+        </div>
+
+        <div class="content-box">
+          <p style="font-weight: bold; margin-bottom: 10px">
+            🌺 철책을 넘는 생명의 메시지
+          </p>
+          <p>
+            AR 콘텐츠 "철책을 넘는 꽃들" "경계 속에서도 생명은 자란다. 자연은
+            국경을 나누지 않는다." 🌸 철책을 넘는 생명의 메시지 DMZ의 철책선
+            사이로 피어나는 꽃들은 분단의 경계를 모른 채 자유롭게 생명을
+            피워냅니다. 인간이 만든 경계는 자연 앞에서 무력해지고, 꽃들은 철책을
+            넘나들며 평화의 메시지를 전합니다. "철책을 넘는 꽃들"은 분단의 현실
+            속에서도 꺾이지 않는 생명력과 희망을 상징합니다. 작은 꽃 한 송이가
+            보여주는 경계를 초월한 자유로움을 통해 평화와 화합의 가치를
+            전달합니다. 이 AR 콘텐츠를 통해 DMZ에서 피어나는 꽃들의 아름다움과
+            평화의 의미를 체험해보세요.
+          </p>
+        </div>
+
+        <button class="ar-btn" onclick="openARExperience()">AR체험 시작</button>
+      </div>
+    </section>
+
+    <!-- 5. 평화의 다리 연결하기 -->
+    <section id="peace-bridge" class="section">
+      <div class="lock-overlay" onclick="showQRNotice()">
+        <div class="lock-content">
+          <div class="lock-icon">🔒</div>
+          <h3 class="lock-title">미션 잠금</h3>
+          <p class="lock-message">
+            지정된 장소에서<br>
+            <strong>QR 코드를 스캔</strong>해주세요
+          </p>
+          <button class="lock-btn">QR 스캔하러 가기</button>
+        </div>
+      </div>
+      <div class="quiz-container">
+        <h2 class="quiz-title">🌉 평화의 다리 연결하기</h2>
+
+        <div class="ar-info">
+          <strong>📱 AR 콘텐츠 이용 방법</strong>
+          <ul class="ar-steps">
+            <li>AR마커를 찾아 인식하세요</li>
+            <li>끊어진 다리를 연결해보세요</li>
+            <li>캐릭터 카드 수집</li>
+          </ul>
+        </div>
+
+        <div class="content-box">
+          <p style="font-weight: bold; margin-bottom: 10px">
+            🎭 평화의 다리 메시지
+          </p>
+          <p>
+            AR 콘텐츠 "평화의 다리 연결하기" "경계 속에서도 생명은 자란다.
+            자연은 국경을 나누지 않는다." 🌉 평화의 다리 메시지 DMZ에 끊어진
+            '평화의 다리'를 참여자가 직접 연결하며 통일과 화합의 의미를 체험하는
+            AR 콘텐츠입니다. "평화의 다리 연결하기"는 분단된 현실 속에서도
+            소통과 화합을 향한 의지를 보여주며, 참여자가 직접 다리를
+            완성함으로써 평화 통일에 대한 염원을 체험할 수 있습니다. 이 AR
+            콘텐츠를 통해 끊어진 다리를 이어가며 평화와 연결의 소중함을
+            느껴보세요.
+          </p>
+        </div>
+
+        <button class="ar-btn" onclick="openARExperience()">AR체험 시작</button>
+      </div>
+    </section>
+
+    <!-- 6. DMZ의 천연기념물 친구들 -->
+    <section id="millennium" class="section">
+      <div class="lock-overlay" onclick="showQRNotice()">
+        <div class="lock-content">
+          <div class="lock-icon">🔒</div>
+          <h3 class="lock-title">미션 잠금</h3>
+          <p class="lock-message">
+            지정된 장소에서<br>
+            <strong>QR 코드를 스캔</strong>해주세요
+          </p>
+          <button class="lock-btn">QR 스캔하러 가기</button>
+        </div>
+      </div>
+      <div class="quiz-container">
+        <h2 class="quiz-title">🦌 DMZ의 천연기념물 친구들</h2>
+
+        <div class="ar-info">
+          <strong>📱 AR 콘텐츠</strong>
+          <ul class="ar-steps">
+            <li>AR마커를 찾아 인식하세요</li>
+            <li>자연회복의 보금자리 인식을 해보세요</li>
+            <li>캐릭터 카드 수집</li>
+          </ul>
+        </div>
+
+        <div class="content-box">
+          <p style="font-weight: bold; margin-bottom: 10px">
+            🦎 DMZ 생태계의 소중한 친구들
+          </p>
+          <p>
+            AR 콘텐츠 "DMZ의 천연기념물 친구들" "분단의 땅에서 피어난 생명,
+            평화가 키운 자연의 보고" 🦌 DMZ 생태계의 소중한 친구들 DMZ는
+            사람들이 사라진 자리에 멸종위기 동물들이 다시 살아나오는 자연의
+            보고입니다. 담비, 산양, 두루미, 사향노루 등 천연기념물들이 철책을
+            모른 채 자유롭게 뛰어놀며 생명의 터전을 만들어가고 있습니다. "DMZ의
+            천연기념물 친구들"은 분단의 아픔 속에서도 꿋꿋이 살아가는
+            야생동물들의 이야기를 전합니다. 인간의 갈등이 사라진 곳에서 자연이
+            되찾은 평화와 조화로운 공존의 가치를 보여줍니다. 이 AR 체험을 통해
+            DMZ에서 만나는 천연기념물들과 함께하며, 자연이 주는 평화의 메시지를
+            느껴보세요.
+          </p>
+        </div>
+
+        <button class="ar-btn" onclick="openARExperience()">AR체험 시작</button>
+      </div>
+    </section>
+
+    <!-- 7. 잊혀진 마을을 찾아서 -->
+    <section id="forgotten-village" class="section">
+      <div class="lock-overlay" onclick="showQRNotice()">
+        <div class="lock-content">
+          <div class="lock-icon">🔒</div>
+          <h3 class="lock-title">미션 잠금</h3>
+          <p class="lock-message">
+            지정된 장소에서<br>
+            <strong>QR 코드를 스캔</strong>해주세요
+          </p>
+          <button class="lock-btn">QR 스캔하러 가기</button>
+        </div>
+      </div>
+      <div class="quiz-container">
+        <h2 class="quiz-title">🏚️ 잊혀진 마을을 찾아서</h2>
+
+        <div class="quiz-info">
+          🏘️ 대성동 마을의 특별한 이야기 DMZ 안에 위치한 대성동 마을은 분단
+          이후에도 꿋꿋이 삶을 이어가는 평화촌입니다. 이곳은 DMZ 내에서도
+          민간인이 거주할 수 있는 유일한 마을로, 분단의 현실 속에서도 일상을
+          지켜나가는 사람들의 이야기가 담겨 있습니다. "잊혀진 마을을 찾아서"는
+          대성동 마을 주민들이 보여주는 평범한 일상 속의 평화와 희망을
+          전달합니다. 논밭을 일구고, 가족과 함께 살아가는 모습을 통해 분단을
+          넘어선 삶의 의지와 평화에 대한 염원을 느낄 수 있습니다.
+        </div>
+
+        <div class="question-box">
+          <p>
+            <strong
+              >Q. 현재 DMZ 안에 실제로 주민이 살고 있는 마을을 알고
+              계신가요?</strong
+            >
+          </p>
+          <ul
+            class="answer-list"
+            data-quiz="forgotten-village"
+            data-correct="2"
+          >
+            <li data-answer="0">1. 철원읍</li>
+            <li data-answer="1">2. 임진강촌</li>
+            <li data-answer="2">3. 대성동</li>
+            <li data-answer="3">4. 도라산역</li>
+          </ul>
+          <div class="quiz-result" id="quiz-result-forgotten-village"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. 철마는 달리고 싶다 -->
+    <section id="iron-horse" class="section">
+      <div class="lock-overlay" onclick="showQRNotice()">
+        <div class="lock-content">
+          <div class="lock-icon">🔒</div>
+          <h3 class="lock-title">미션 잠금</h3>
+          <p class="lock-message">
+            지정된 장소에서<br>
+            <strong>QR 코드를 스캔</strong>해주세요
+          </p>
+          <button class="lock-btn">QR 스캔하러 가기</button>
+        </div>
+      </div>
+      <div class="quiz-container">
+        <h2 class="quiz-title">🚂 철마는 달리고 싶다</h2>
+
+        <div class="ar-info">
+          <strong>📱 AR 콘텐츠 이용 방법</strong>
+          <ul class="ar-steps">
+            <li>AR마커를 찾아 인식하세요</li>
+            <li>끊어진 남북 철로를 연결해 보세요</li>
+            <li>캐릭터 카드 수집</li>
+          </ul>
+        </div>
+
+        <div class="content-box">
+          <p style="font-weight: bold; margin-bottom: 10px">
+            🚃 끊어진 철길의 꿈
+          </p>
+          <p>
+            AR 콘텐츠 "철마는 달리고 싶다" "경계 속에서도 생명은 자란다. 자연은
+            국경을 나누지 않는다." 🚂 끊어진 철길의 꿈 "철마는 달리고 싶다"는
+            분단으로 끊어진 남북 철길을 AR로 체험하는 콘텐츠입니다. 참여자는
+            멈춰선 철마(기차)와 끊어진 철길을 통해 분단의 현실을 체감하고,
+            언젠가 다시 이어질 통일의 꿈을 느낄 수 있습니다. DMZ를 관통하던
+            경의선과 동해선 철도는 분단과 함께 멈춰섰지만, 철마는 여전히 달리고
+            싶어합니다. 이 AR 체험을 통해 끊어진 철길 너머로 펼쳐질 통일된
+            한반도의 미래를 상상해볼 수 있습니다. 철길이 다시 이어져 남북을
+            자유롭게 오가는 그날의 희망을 품고, 평화와 연결의 의미를
+            체험해보세요.
+          </p>
+        </div>
+
+        <button class="ar-btn" onclick="openARExperience()">AR체험 시작</button>
+      </div>
+    </section>
+
+    <!-- 9. DMZ 평화의 약속 -->
+    <section id="peace-promise" class="section">
+      <div class="lock-overlay" onclick="showQRNotice()">
+        <div class="lock-content">
+          <div class="lock-icon">🔒</div>
+          <h3 class="lock-title">미션 잠금</h3>
+          <p class="lock-message">
+            지정된 장소에서<br>
+            <strong>QR 코드를 스캔</strong>해주세요
+          </p>
+          <button class="lock-btn">QR 스캔하러 가기</button>
+        </div>
+      </div>
+      <div class="quiz-container">
+        <h2 class="quiz-title">🤝 DMZ 평화의 약속</h2>
+
+        <div class="ar-info">
+          <strong>📱 AR 콘텐츠 이용 방법</strong>
+          <ul class="ar-steps">
+            <li>AR마커를 찾아 인식하세요.</li>
+            <li>평화의 메세지를 남겨보세요.</li>
+            <li>캐릭터 카드 수집</li>
+          </ul>
+        </div>
+
+        <div class="content-box">
+          <p style="font-weight: bold; margin-bottom: 10px">🕊️ 평화의 약속</p>
+          <p>
+            평화 메시지 남기기<br />
+            DMZ에서 느낀 평화의 의미를 한 줄 메시지로 남겨보세요.<br />
+            간단 입력: "나는 _______ 하겠습니다"<br />
+            (예: 나는 자연을 함부로 대하지 않겠습니다.)
+          </p>
+        </div>
+
+        <button class="ar-btn" onclick="openARExperience()">AR체험 시작</button>
+      </div>
+    </section>
+
+    <!-- 10. 자연이 지킨 비밀 -->
+    <section id="nature-secret" class="section">
+      <div class="lock-overlay" onclick="showQRNotice()">
+        <div class="lock-content">
+          <div class="lock-icon">🔒</div>
+          <h3 class="lock-title">미션 잠금</h3>
+          <p class="lock-message">
+            지정된 장소에서<br>
+            <strong>QR 코드를 스캔</strong>해주세요
+          </p>
+          <button class="lock-btn">QR 스캔하러 가기</button>
+        </div>
+      </div>
+      <div class="quiz-container">
+        <h2 class="quiz-title">🌿 자연이 지킨 비밀</h2>
+
+        <div class="quiz-info">
+          DMZ 생태계의 신비<br />
+          DMZ는 70년간 사람의 발길이 닿지 않아 원시 자연이 보존된 특별한
+          공간입니다. 이곳에서는 멸종위기 동물들이 다시 번성하고, 희귀한
+          식물들이 자생하며 자연의 회복력을 보여주고 있습니다.
+        </div>
+
+        <div class="question-box">
+          <p><strong>Q. DMZ가 생태적으로 중요한 이유는 무엇일까요?</strong></p>
+          <ul class="answer-list" data-quiz="nature-secret" data-correct="2">
+            <li data-answer="0">1. 사람이 많이 살아서</li>
+            <li data-answer="1">2. 쇼핑센터가 없어서</li>
+            <li data-answer="2">3. 개발이 제한되어 다양한 생물이 살아서</li>
+            <li data-answer="3">4. 군대가 있어서 보호되기 떄문에</li>
+          </ul>
+          <div class="quiz-result" id="quiz-result-nature-secret"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. 함께 걷는 평화의 길 -->
+    <section id="peace-path" class="section">
+      <div class="lock-overlay" onclick="showQRNotice()">
+        <div class="lock-content">
+          <div class="lock-icon">🔒</div>
+          <h3 class="lock-title">미션 잠금</h3>
+          <p class="lock-message">
+            지정된 장소에서<br>
+            <strong>QR 코드를 스캔</strong>해주세요
+          </p>
+          <button class="lock-btn">QR 스캔하러 가기</button>
+        </div>
+      </div>
+      <div class="quiz-container">
+        <h2 class="quiz-title">👣 함께 걷는 평화의 길</h2>
+
+        <div class="ar-info">
+          <strong>📱 AR 콘텐츠 이용 방법</strong>
+          <ul class="ar-steps">
+            <li>AR마커를 찾아 인식하세요</li>
+            <li>평화길을 걸어보며 함께 사진을 찍어요</li>
+          </ul>
+        </div>
+
+        <div class="content-box">
+          <p style="font-weight: bold; margin-bottom: 10px">
+            🌿 DMZ 여정의 완성
+          </p>
+          <p>
+            "함께 걷는 평화의 길"은 지금까지의 DMZ 체험을 마무리하며, 참여자가
+            걸어온 평화의 여정을 되돌아보는 종합 콘텐츠입니다. 참여자들이 함께
+            걸으며 나누는 작은 발걸음이 큰 평화의 길로 이어지길 바라며, DMZ에서
+            만난 모든 친구들과 함께 평화의 소중함을 기억하게 됩니다.
+          </p>
+        </div>
+
+        <a href="#complete" class="ar-btn">완주 페이지로 →</a>
+      </div>
+    </section>
+
+    <!-- 12. 완주 페이지 -->
+    <section id="complete" class="section">
+      <div class="quiz-container">
+        <!-- 메인 완주 페이지 -->
+        <div id="main-completion" class="completion-main">
+          <h2 class="completion-title">2025 DMZ 오픈레이스</h2>
+          <p class="completion-subtitle">11개 미션 중 7개 이상 완료 시 인증 완료를 받을 수 있습니다.</p>
+          
+          <!-- 스탬프 그리드 -->
+          <div class="stamps-collection-grid" id="stamps-collection">
+            <!-- JavaScript로 동적 생성 -->
+          </div>
+
+          <button onclick="verifyCompletion()" class="completion-verify-btn">
+            🏆 완주 인증받기
+          </button>
+
+          <!-- 하단 액션 버튼들 -->
+          <div class="bottom-actions">
+            <!-- <button onclick="showResetModal()" class="action-btn reset">
+              🔄 진행상황 초기화
+            </button> -->
+            
+            <a href="#start" class="action-btn home">
+              🏠 처음으로 돌아가기
+            </a>
+          </div>
+        </div>
+
+        <!-- 축하 성공 메시지 (숨김 상태) -->
+        <div id="success-celebration" class="success-container" style="display: none;">
+          <div class="success-icon">🏆</div>
+          <h2 class="success-title">축하합니다! 🎉</h2>
+          <p class="success-message">
+            2025 DMZ 오픈레이스 완주 인증 완료!<br>
+            <strong>평화의 발자취</strong>를 완성하셨습니다.
+          </p>
+          
+          <div class="completion-stats">
+            <div class="stat">
+              <span class="stat-number" id="final-completed">0</span>
+              <span class="stat-label">완료 미션</span>
+            </div>
+            <div class="stat">
+              <span class="stat-number">2025</span>
+              <span class="stat-label">광복 80주년</span>
+            </div>
+          </div>
+
+          <button onclick="shareCompletion()" class="share-completion-btn">
+            📤 완주 인증서 공유하기
+          </button>
+          
+          <button onclick="showMainCompletion()" class="back-to-main-btn">
+            ← 돌아가기
+          </button>
+        </div>
+
+        <!-- 미달 안내 메시지 (숨김 상태) -->
+        <div id="insufficient-message" class="insufficient-container" style="display: none;">
+          <div class="insufficient-icon">📝</div>
+          <h2 class="insufficient-title">인증 조건 미달</h2>
+          <p class="insufficient-text">
+            완주 인증을 받으려면 <strong>최소 7개 미션</strong>을 완료해야 합니다.<br>
+            현재 <span id="current-completed">0</span>개 완료, <span id="needed-more">7</span>개 더 필요합니다.
+          </p>
+          
+          <button onclick="goToFirstIncomplete()" class="continue-mission-btn">
+            📍 미션 계속하기
+          </button>
+          
+          <button onclick="showMainCompletion()" class="retry-verification-btn">
+            🔄 다시 인증받기
+          </button>
+        </div>
+
+        <!-- 초기화 모달 -->
+        <div id="resetModal" class="modal">
+          <div class="modal-content">
+            <h3 style="color: #dc3545; margin-bottom: 15px">⚠️ 진행상황 초기화</h3>
+            <p style="color: #666; line-height: 1.6; margin-bottom: 20px">
+              모든 퀴즈 답변과 AR 체험 기록이 삭제됩니다.<br>
+              정말로 초기화하시겠습니까?
+            </p>
+            <div class="modal-buttons">
+              <button class="modal-btn cancel" onclick="hideResetModal()">취소</button>
+              <button class="modal-btn confirm" onclick="resetProgress()">초기화</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 축하 효과 컨테이너 -->
+      <div id="celebration-effects"></div>
+    </section>
+
+  <!-- 기본정보 입력 모달 - body 태그 시작 직후에 추가 -->
+  <div class="modal-overlay" id="userInfoModal" style="display: none;">
+    <div class="modal-container">
+      
+      <div class="modal-header">
+        <div class="modal-header-content">
+          <h3 class="modal-title">2025 DMZ 오픈레이스 참가 정보</h3>
+        </div>
+      </div>
+      
+      <div class="division-line"></div>
+      
+      <div class="modal-body">
+        <div class="discovery-message">
+          <p class="discovery-text">광복 80주년 기념 평화 스탬프 투어에<br> 오신 것을 환영합니다</p>
+          <p class="discovery-subtext">
+              참가자 정보를 입력하시면<br>DMZ의 평화로운 여정이 시작됩니다
+          </p>
+        </div>
+          
+        <div class="input-group">
+          <label class="input-label" for="userName">이름</label>
+          <input 
+              type="text" 
+              class="input-field" 
+              id="userName" 
+              placeholder="참가자 이름을 입력해주세요"
+              maxlength="20"
+              required
+          />
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="userAge">연락처</label>
+          <input 
+              type="text" 
+              class="input-field" 
+              id="userContact" 
+              placeholder="참가자 연락처를 입력해주세요"
+              maxlength="20"
+              required
+          />
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="userRegion">거주 지역</label>
+          <select class="input-field" id="userRegion" required>
+            <option value="">거주 지역을 선택해주세요</option>
+            <option value="서울">서울</option>
+            <option value="부산">부산</option>
+            <option value="대구">대구</option>
+            <option value="인천">인천</option>
+            <option value="광주">광주</option>
+            <option value="대전">대전</option>
+            <option value="울산">울산</option>
+            <option value="세종">세종</option>
+            <option value="경기도">경기도</option>
+            <option value="강원도">강원도</option>
+            <option value="충청북도">충청북도</option>
+            <option value="충청남도">충청남도</option>
+            <option value="전라북도">전라북도</option>
+            <option value="전라남도">전라남도</option>
+            <option value="경상북도">경상북도</option>
+            <option value="경상남도">경상남도</option>
+            <option value="제주도">제주도</option>
+            <option value="해외">해외</option>
+          </select>
+        </div>
+        
+        <div class="error-message" id="userInfoError" style="display: none;">
+          모든 항목을 입력해주세요.
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn btn-confirm" id="startEventBtn" onclick="saveUserInfoAndStart()">
+            🚀 이벤트 시작하기
+        </button>
+      </div>
+    </div>
+  </div>
+  <script>
+    let arWindow;
+
+    function openARExperience() {
+        // 새 창으로 AR 페이지 열기
+        arWindow = window.open('/ar.html', 'ar-experience', 'width=800,height=600');
+        
+        // 부모 창에서 메시지 받는 부분 (메인 페이지에서 사용)
+      window.addEventListener('message', (event) => {
+          if (event.data.type === 'AR_COMPLETE') {
+              // AR 경험 완료 처리
+              completeARExperience(event.data.sectionId, event.data.note);
+              
+              // 메시지가 있다면 별도 처리 (옵션)
+              if (event.data.note) {
+                  console.log(`사용자 메시지: ${event.data.note}`);
+                  // 필요하다면 UI에 메시지 표시하는 로직 추가
+              }
+              
+              if (arWindow) {
+                  arWindow.close();
+              }
+
+              setTimeout(() => {
+                  scrollToSection('complete');
+              }, 3000); 
+          }
+      });
+
+        window.addEventListener('focus', () => {
+          const completion = localStorage.getItem('new-completion');
+          console.log(completion);
+          if (completion) {
+              localStorage.removeItem('new-completion');
+              completeARExperience(completion, null);
+              setTimeout(() => {
+                  scrollToSection('complete');
+              }, 3000);
+          }
+        });
+
+        
+    }
+
+  </script>
+
+  <script src="js/common.js"></script>
+  <script src="js/completion.js"></script>
+
+  <div class="floating-buttons">
+    <button class="float-btn qr-btn" onclick="startCamera()" title="QR 코드 스캔">
+      <span class="btn-icon">📷</span>
+      <span class="btn-label">QR스캔</span>
+    </button>
+    
+    <button class="float-btn status-btn" onclick="scrollToSection('complete')" title="인증 현황 확인">
+      <span class="btn-icon">✅</span>
+      <span class="btn-label">인증현황</span>
+    </button>
+  </div>
+  
+</body>
+</html>
